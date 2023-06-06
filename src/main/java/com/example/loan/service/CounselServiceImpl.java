@@ -2,6 +2,8 @@ package com.example.loan.service;
 
 import com.example.loan.domain.Counsel;
 import com.example.loan.dto.CounselDTO;
+import com.example.loan.exception.BaseException;
+import com.example.loan.exception.ResultType;
 import com.example.loan.repository.CounselRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -22,5 +24,13 @@ public class CounselServiceImpl implements CounselService{
 
         Counsel created = counselRepository.save(counsel);
         return modelMapper.map(created, CounselDTO.Response.class);
+    }
+
+    @Override
+    public CounselDTO.Response get(Long counselId) {
+        Counsel counsel = counselRepository.findById(counselId).orElseThrow(() -> {
+                    throw new BaseException(ResultType.SYSTEM_ERROR);
+                });
+        return modelMapper.map(counsel, CounselDTO.Response.class);
     }
 }
