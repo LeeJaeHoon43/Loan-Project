@@ -13,7 +13,6 @@ import java.io.Serializable;
 public class ResultObject implements Serializable {
 
     public String code;
-
     public String desc;
 
     public ResultObject(ResultType resultType) {
