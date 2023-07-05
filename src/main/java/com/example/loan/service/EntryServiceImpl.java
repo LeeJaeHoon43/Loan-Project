@@ -11,6 +11,8 @@ import com.example.loan.repository.EntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -46,17 +48,57 @@ public class EntryServiceImpl implements EntryService{
 
     @Override
     public EntryDTO.Response get(Long applicationId) {
-        return null;
+        Entry entry = entryRepository.findByApplicationId(applicationId);
+
+        return modelMapper.map(entry, EntryDTO.Response.class);
     }
 
     @Override
     public EntryDTO.UpdateResponse update(Long entryId, EntryDTO.Request request) {
-        return null;
+        Entry entry = entryRepository.findById(entryId).orElseThrow(() -> {
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
+
+        BigDecimal beforeEntryAmount = entry.getEntryAmount();
+        entry.setEntryAmount(request.getEntryAmount());
+
+        entryRepository.save(entry);
+
+        Long applicationId = entry.getApplicationId();
+        balanceService.update(applicationId,
+                BalanceDTO.UpdateRequest.builder()
+                        .beforeEntryAmount(beforeEntryAmount)
+                        .afterEntryAmount(request.getEntryAmount())
+                        .build()
+        );
+
+        return EntryDTO.UpdateResponse.builder()
+                .entryId(entryId)
+                .applicationId(entry.getApplicationId())
+                .beforeEntryAmount(beforeEntryAmount)
+                .afterEntryAmount(entry.getEntryAmount())
+                .build();
     }
 
     @Override
     public void delete(Long entryId) {
+        Entry entry = entryRepository.findById(entryId).orElseThrow(() -> {
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
 
+        entry.setIsDeleted(true);
+
+        entryRepository.save(entry);
+
+        BigDecimal beforeEntryAmount = entry.getEntryAmount();
+
+        Long applicationId = entry.getApplicationId();
+        balanceService.update(applicationId,
+                BalanceDTO.UpdateRequest.builder()
+                        .beforeEntryAmount(beforeEntryAmount)
+                        .afterEntryAmount(BigDecimal.ZERO)
+                        .build()
+        );
     }
 
     private boolean isContractedApplication(Long applicationId){
