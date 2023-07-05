@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,5 +79,10 @@ public class ApplicationController extends AbstractController{
         }).collect(Collectors.toList());
 
         return ok(fileInfos);
+    }
+
+    @PutMapping("/{applicationId}/contract")
+    public ResponseDTO<ApplicationDTO.Response> contract(@PathVariable Long applicationId){
+        return ok(applicationService.contract(applicationId));
     }
 }
