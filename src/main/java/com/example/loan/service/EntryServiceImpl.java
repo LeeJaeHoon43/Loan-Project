@@ -11,7 +11,6 @@ import com.example.loan.repository.EntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -48,7 +47,7 @@ public class EntryServiceImpl implements EntryService{
 
     @Override
     public EntryDTO.Response get(Long applicationId) {
-        Entry entry = entryRepository.findByApplicationId(applicationId);
+        Optional<Entry> entry = entryRepository.findByApplicationId(applicationId);
 
         return modelMapper.map(entry, EntryDTO.Response.class);
     }

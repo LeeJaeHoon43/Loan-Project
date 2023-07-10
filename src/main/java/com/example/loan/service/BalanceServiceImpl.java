@@ -26,7 +26,7 @@ public class BalanceServiceImpl implements BalanceService{
         balance.setApplicationId(applicationId);
         balance.setBalance(entryAmount);
 
-        balanceRepository.findAllByApplicationId(applicationId).ifPresent(b -> {
+        balanceRepository.findByApplicationId(applicationId).ifPresent(b -> {
             balance.setBalanceId(b.getBalanceId());
             balance.setIsDeleted(b.getIsDeleted());
             balance.setCreatedAt(b.getCreatedAt());
@@ -49,7 +49,7 @@ public class BalanceServiceImpl implements BalanceService{
 
     @Override
     public BalanceDTO.Response update(Long applicationId, BalanceDTO.UpdateRequest request) {
-        Balance balance = balanceRepository.findAllByApplicationId(applicationId).orElseThrow(() -> {
+        Balance balance = balanceRepository.findByApplicationId(applicationId).orElseThrow(() -> {
             throw new BaseException(ResultType.SYSTEM_ERROR);
         });
 
@@ -66,8 +66,32 @@ public class BalanceServiceImpl implements BalanceService{
     }
 
     @Override
+    public BalanceDTO.Response repaymentUpdate(Long applicationId, BalanceDTO.RepaymentRequest request) {
+        Balance balance = balanceRepository.findByApplicationId(applicationId).orElseThrow(() -> {
+            throw new BaseException(ResultType.SYSTEM_ERROR);
+        });
+
+        BigDecimal updatedBalance = balance.getBalance();
+        BigDecimal repaymentAmount = request.getRepaymentAmount();
+
+        // 상환 정상 : balance - repaymentAmount
+        // 상환금 롤백 : balance + repaymentAmount
+        if (request.getType().equals(BalanceDTO.RepaymentRequest.RepaymentType.ADD)){
+            updatedBalance = updatedBalance.add(repaymentAmount);
+        } else {
+            updatedBalance = updatedBalance.subtract(repaymentAmount);
+        }
+
+        balance.setBalance(updatedBalance);
+
+        Balance updated = balanceRepository.save(balance);
+
+        return modelMapper.map(updated, BalanceDTO.Response.class);
+    }
+
+    @Override
     public void delete(Long applicationId) {
-        Balance balance = balanceRepository.findAllByApplicationId(applicationId).orElseThrow(() -> {
+        Balance balance = balanceRepository.findByApplicationId(applicationId).orElseThrow(() -> {
             throw new BaseException(ResultType.SYSTEM_ERROR);
         });
 
